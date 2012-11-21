@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <netdb.h>
+#include <string.h>
 #include <strings.h>
 
 #define SERVER_PORT 6000

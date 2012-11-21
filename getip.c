@@ -1,20 +1,15 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <errno.h> 
-#include <netdb.h> 
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
-int main(int argc, char *argv[])
+int getip(char * hostname)
 {
 	struct hostent *h;
-
-        if (argc != 2) {  
-            fprintf(stderr,"usage: getip address\n");
-            exit(1);
-        }
-        
-        
 
 	struct hostent {
 		char    *h_name;	/*Official name of the host.*/ 
@@ -23,7 +18,7 @@ int main(int argc, char *argv[])
     	int     h_length;	/*The length of the address in bytes.*/
 		char    **h_addr_list;	/*A zero-terminated array of network addresses for the host. 
 				Host addresses are in Network Byte Order. */
-};
+	};
 
 #define h_addr h_addr_list[0]	/*The first address in h_addr_list. */
 
@@ -34,7 +29,7 @@ int main(int argc, char *argv[])
 				  - ipv6 address in colon (or possibily dot) notation
 */
 
-        if ((h=gethostbyname(argv[1])) == NULL) {  
+        if ((h=gethostbyname(hostname)) == NULL) {
             herror("gethostbyname");
             exit(1);
         }

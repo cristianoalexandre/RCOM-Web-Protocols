@@ -1,4 +1,5 @@
 #include "ftpClient.h"
+#include "getip.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -21,6 +22,30 @@ int main(int argc, char * argv[]) {
 	}
 
 	printf("String compiled sucessfully");
+
+	char buffer[HOSTLENGTH];
+	int foundit = 0;
+	int j = 0;
+
+	for (int i = 0; i < strlen(argv[1]); i++) {
+		if (argv[1][i] == '@') {
+			foundit = 1;
+		}
+
+		if (foundit && argv[1][i] != '/') {
+			buffer[j] = argv[1][i];
+			j++;
+		}
+	}
+
+	if (!foundit) {
+		for (int i = 0; ; i++) {
+			if (argv[1][i] != '/') break;
+
+			buffer[j] = argv[1][i];
+			j++;
+		}
+	}
 
 
 
