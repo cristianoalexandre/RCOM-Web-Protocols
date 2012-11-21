@@ -12,10 +12,9 @@
 #include <string.h>
 #include <strings.h>
 
-#define SERVER_PORT 6000
-#define SERVER_ADDR "192.168.28.96"
+#define SERVER_PORT 80
 
-int main(int argc, char** argv){
+int sendmessage (char * hostip){
 
 	int	sockfd;
 	struct	sockaddr_in server_addr;
@@ -25,7 +24,7 @@ int main(int argc, char** argv){
 	/*server address handling*/
 	bzero((char*)&server_addr,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);	/*32 bit Internet address network byte ordered*/
+	server_addr.sin_addr.s_addr = inet_addr(hostip);	/*32 bit Internet address network byte ordered*/
 	server_addr.sin_port = htons(SERVER_PORT);		/*server TCP port must be network byte ordered */
     
 	/*open an TCP socket*/

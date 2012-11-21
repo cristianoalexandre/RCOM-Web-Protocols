@@ -21,33 +21,55 @@ int main(int argc, char * argv[]) {
 		exit(1);
 	}
 
-	printf("String compiled sucessfully");
+	printf("String compiled sucessfully\n\n");
 
 	char buffer[HOSTLENGTH];
+	bzero(buffer, HOSTLENGTH);
 	int foundit = 0;
 	int j = 0;
 
 	for (int i = 0; i < strlen(argv[1]); i++) {
 		if (argv[1][i] == '@') {
 			foundit = 1;
+			continue;
 		}
 
 		if (foundit && argv[1][i] != '/') {
 			buffer[j] = argv[1][i];
 			j++;
 		}
-	}
 
-	if (!foundit) {
-		for (int i = 0; ; i++) {
-			if (argv[1][i] != '/') break;
-
-			buffer[j] = argv[1][i];
-			j++;
+		if ( argv[1][i] == '/') {
+			foundit = 0;
+			break;
 		}
 	}
 
+	foundit=0;
+	j = 0;
+	if (buffer[0] == '\0') {
+		for (int i = 0; i < strlen(argv[1])  ; i++) {
+			if (i >= HOSTLENGTH)
+				puts("Shit! Something's wrong!");
 
+			if (argv[1][i] == '/' && argv[1][i+1]== '/') {
+				foundit = 1;
+				continue;
+			}
+
+			if (foundit && argv[1][i] != '/') {
+				buffer[j] = argv[1][i];
+				j++;
+			}
+
+			if (argv[1][i] == '/' && argv[1][i+1] != '/' && argv[1][i-1] != '/') {
+				foundit = 0;
+				break;
+			}
+		}
+	}
+
+	char * h_addr = (char *)getip(buffer);
 
 	return 0;
 }
@@ -59,7 +81,7 @@ int parseAdd(char * address) {
 	int totalMatch;
 	int matchesBegin;
 
-	if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*)*@([A-Za-z0-9])+/([[A-Za-z0-9/])+", REG_EXTENDED) != 0) {
+	if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.])+/([[A-Za-z0-9/])+", REG_EXTENDED) != 0) {
 		perror("Could not compile regular expression");
 		exit(1);
 	}

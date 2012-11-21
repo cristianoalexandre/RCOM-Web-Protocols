@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-int getip(char * hostname)
+char * getip(char * hostname)
 {
 	struct hostent *h;
 
@@ -40,5 +40,5 @@ int getip(char * hostname)
 		   and stors it in struct given*/
         printf("IP Address : %s\n",inet_ntoa(*((struct in_addr *)h->h_addr)));
 
-        return 0;
+        return (char *)inet_ntoa(*((struct in_addr *)h->h_addr));
 }
