@@ -5,9 +5,10 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <regex.h>
+#include <string.h>
 
 int main(int argc, char * argv[]) {
-	if (argc <= 0 || argc > 2) {
+	if (argc <= 1 || argc > 2) {
 		perror("ERROR: Invalid usage!");
 		perror("Usage: client ftp://[<user>:<password>@]<host>/<url-path>!");
 		exit(1);
@@ -19,6 +20,8 @@ int main(int argc, char * argv[]) {
 		exit(1);
 	}
 
+	printf("String compiled sucessfully");
+
 
 
 	return 0;
@@ -26,33 +29,26 @@ int main(int argc, char * argv[]) {
 
 int parseAdd(char * address) {
 	regex_t preg;
-	 size_t nmatch=strlen(address);
-	 regmatch_t pmatch[nmatch];
+	size_t nmatch=strlen(address);
+	regmatch_t pmatch[nmatch];
+	int totalMatch;
+	int matchesBegin;
 
-	char * regex = "ftp://[A-Za-z0-9:A-Za-z0-9@]*[A-Za-z0-9]+";
-
-	/* teste string= "ftp://\\(\\([a-zA-Z0-9\\.]\\+:[a-zA-Z0-9]*@\\)\\?\\|@\\?\\)\\([a-zA-Z0-9]\\+[\\.]\\)\\+[a-zA-Z0-9]\\+/\\([a-zA-Z0-9]\\+[/]\\?\\)*"
-	*/
-
-	if (regcomp(&preg, regex, 0) != 0) {
+	if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*)*@([A-Za-z0-9])+/([[A-Za-z0-9/])+", REG_EXTENDED) != 0) {
 		perror("Could not compile regular expression");
 		exit(1);
 	}
 
-	int status = regexec(&preg, address, nmatch, pmatch, 0);
+	regexec(&preg, address, nmatch, pmatch, REG_EXTENDED);
 
 	regfree(&preg);
-	
+
 	totalMatch=pmatch[0].rm_eo;
-	matchesBegin=pmatch[0].rm_so==0;
+	matchesBegin=pmatch[0].rm_so;
 
-
-	if(status != 0) {
-		printf("1\n");
+	if(totalMatch != nmatch || matchesBegin != 0) {
 		return 1;
 	}
 
-	printf("0\n");
 	return 0;
 }
-
