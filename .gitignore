@@ -8,6 +8,7 @@
 *.so
 clienttcp
 getip
+client
 
 # Packages #
 ############
@@ -38,3 +39,9 @@ getip
 Icon?
 ehthumbs.db
 Thumbs.db
+
+# Project Files #
+#################
+*.bash
+*.xml
+*.properties
