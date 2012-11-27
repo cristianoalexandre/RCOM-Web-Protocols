@@ -13,8 +13,6 @@
 #include <string.h>
 #include <strings.h>
 
-#define SERVER_PORT 80
-
-int sendMessage(char* hostip, char* buf);
+int connect_socket(char* hostip, int port);
 
 #endif	/* CLIENTTCP_H */
