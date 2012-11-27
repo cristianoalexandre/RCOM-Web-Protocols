@@ -10,6 +10,7 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
+    /* Checks if well writen usage */
     if (parseAdd(argv[1]))
     {
         perror("ERROR: Invalid ftp string!");
@@ -19,87 +20,80 @@ int main(int argc, char * argv[])
 
     printf("String compiled sucessfully\n\n");
 
-    char shiftedBuffer[strlen(argv[1]) - 5];
-    strncpy(shiftedBuffer, argv[1] + 6, strlen(argv[1]) - 5);
+    /* Removes "ftp://" from string */
+    char ftpFreeBuffer[strlen(argv[1]) - 5];
+    strncpy(ftpFreeBuffer, argv[1] + 6, strlen(argv[1]) - 5);
 
-
-    puts(shiftedBuffer);
-    /* Has username and password - passing them! */
-
-    char buffer[HOST_LENGTH];
-    bzero(buffer, HOST_LENGTH);
-    int foundit = 0;
-    int j = 0;
-    int k = 0;
-    int l = 0;
-
-    int atPosition = -1; /* -1 if before at, 1 if after or at @ */
-    int colonPosition = -1; /* -1 if before colon, 1 if after or colon : */
+    /* Defines strings to use and cleans them */
     char username[USERNAME_LENGTH];
-    char password[PASSWORD_LENGTH];
     bzero(username, USERNAME_LENGTH);
+    char password[PASSWORD_LENGTH];
     bzero(password, PASSWORD_LENGTH);
+    char host[HOST_LENGTH];
+    bzero(host, HOST_LENGTH);
+    char url[URL_LENGTH];
+    bzero(url, URL_LENGTH);
 
-    for (int i = 0; i < strlen(shiftedBuffer); i++)
-    {
-        if (shiftedBuffer[i] == '@') {
-            atPosition = 1;
-            foundit = 1;
-            continue;
-        }
+    /* Checks if has password and username defined */
+    char * hasuser = strchr(ftpFreeBuffer, '@');
 
-        if (shiftedBuffer[i] == ':') {
-            colonPosition = 1;
-            continue;
-        }
+    if (hasuser != NULL) {
+    	/* Copys localy string to parse */
+    	char shiftedBuffer[strlen(argv[1]) - 5];
+    	strcpy(shiftedBuffer, ftpFreeBuffer);
 
-        if (atPosition == -1 && colonPosition == 1) {
-            password[l] = shiftedBuffer[i];
-            l++;
-        }
+    	/* Find and get username */
+		char * p = strchr(shiftedBuffer, ':');
 
-        if (atPosition == -1 && colonPosition == -1) {
-            username[k] = shiftedBuffer[i];
-            k++;
-        }
+		int position = (int)(p-shiftedBuffer);
+		strncpy(username, shiftedBuffer, position);
 
-        if (foundit && shiftedBuffer[i] != '/') {
-            buffer[j] = shiftedBuffer[i];
-            j++;
-        }
+		/* Shifts string to get password */
+		strncpy(shiftedBuffer, shiftedBuffer + position + 1, strlen(shiftedBuffer)-position);
 
-        if (shiftedBuffer[i] == '/') {
-            foundit = 0;
-            break;
-        }
+		/* Finds and gets password */
+		p = strchr(shiftedBuffer, '@');
+		position = (int)(p-shiftedBuffer);
+		strncpy(password, shiftedBuffer, position);
+
+		/* Shifts string to get host */
+		strncpy(shiftedBuffer, shiftedBuffer + position + 1, strlen(shiftedBuffer)-position);
+
+		/* Gets hostname */
+		p = strchr(shiftedBuffer, '/');
+		position = (int)(p-shiftedBuffer);
+		strncpy(host, shiftedBuffer, position);
+
+		/* Shifts string to get url */
+		strncpy(shiftedBuffer, shiftedBuffer + position + 1, strlen(shiftedBuffer)-position);
+
+		/* Gets url path */
+		strcpy(url, shiftedBuffer);
+
+
+		printf("host %s, username %s, pass %s, url %s\n", host, username, password, url);
     }
-    
-    /* No user and pass: assumes anonymous and blank password*/
+    else {
+		/* Copys localy string to parse */
+		char shiftedBuffer[strlen(argv[1]) - 5];
+		strcpy(shiftedBuffer, ftpFreeBuffer);
 
-    foundit = 0;
-    j = 0;
-    if (buffer[0] == '\0')
-    {
-        strcpy(username, "anonymous");
-        strcpy(password, "");
-        
-        for (int i = 0; i < strlen(argv[1]); i++)
-        {
-            if (argv[1][i] == '/' && argv[1][i + 1] == '/') {
-                foundit = 1;
-                continue;
-            }
+		/* Username and Password defined */
+		strcpy(username, "anonymous");
+		strcpy(password, "");
 
-            if (foundit && argv[1][i] != '/') {
-                buffer[j] = argv[1][i];
-                j++;
-            }
+		/* Gets hostname */
+		char * p = strchr(shiftedBuffer, '/');
+		int position = (int)(p-shiftedBuffer);
+		strncpy(host, shiftedBuffer, position);
 
-            if (argv[1][i] == '/' && argv[1][i + 1] != '/' && argv[1][i - 1] != '/') {
-                foundit = 0;
-                break;
-            }
-        }
+		/* Shifts string to get url */
+		strncpy(shiftedBuffer, shiftedBuffer + position + 1, strlen(shiftedBuffer)-position);
+
+		/* Gets url path */
+		strcpy(url, shiftedBuffer);
+
+		printf("secopdn host %s, username %s, pass %s, url %s\n", host, username, password, url);
     }
 
     char user[USERNAME_LENGTH];
@@ -114,9 +108,9 @@ int main(int argc, char * argv[])
     strcat(pass, password);
     strcat(pass, "\r\n");
 
-    printf("username %s, password %s\n", username, password);
+    printf("username %s, password %s\n", user, pass);
 
-    char * h_address = (char*) getip(buffer);
+    char * h_address = (char*) getip(host);
 
     int sockfd = connect_socket(h_address, 21);
 
@@ -149,68 +143,87 @@ int main(int argc, char * argv[])
 
     write(sockfd, "pasv\r\n", 6);
     rec = receive_data(sockfd);
-    printf("aqui");
-    printf("rec: %i", rec);
-
     if(rec == -1) {
     	perror("Access denied 3! Exiting...\n");
     	exit(1);
     }
 
+    printf("Connecting to %d!\n", rec);
+
     /* Connecting to new port */
     int auxsockfd = connect_socket(h_address, rec);
-
-    printf("fd: %i", auxsockfd);
-
     rec = receive(auxsockfd);
+    if(rec == -1) {
+		perror("Access denied 4! Exiting...\n");
+		exit(1);
+	}
+
+    printf("Connected!\n");
+
+
 
     return 0;
 }
 
 int receive_data(int sockfd) {
 	char buf[MESSAGE_LENGTH];
+	bzero(buf, MESSAGE_LENGTH);
 
 	int status = read(sockfd, buf, MESSAGE_LENGTH);
 
 	if(status > 0) {
 		printf("%s\n", buf);
-		char tempbuf[MESSAGE_LENGTH];
-		bzero(tempbuf, MESSAGE_LENGTH);
-		strcpy(tempbuf, buf);
+
+		/* Gets status */
+		char tempBuf[strlen(buf)];
+		bzero(tempBuf, strlen(buf));
+		strcpy(tempBuf, buf);
 		char statuscode[3];
 		bzero(statuscode, 3);
-		strncpy(statuscode, tempbuf, 3);
+		strncpy(statuscode, tempBuf, 3);
 		statuscode[3] = '\0';
-
 
 		int recstatus = atoi(statuscode);
 
+		char firstnumber[10];
+		char secondnumber[10];
+		bzero(firstnumber, strlen(firstnumber));
+		bzero(secondnumber, strlen(secondnumber));
+
+		/* Checks if coded received is status good to continue*/
 		if (recstatus == PORT_STATUS) {
-			int comma = 0;
-			char firstnumber[10];
-			char secondnumber[10];
-			bzero(firstnumber, strlen(firstnumber));
-			bzero(secondnumber, strlen(secondnumber));
-			int j = 0;
-			int k = 0;
+			/* Shifts string to the first "," */
+			char * p = strchr(tempBuf, ',');
+			int position = (int)(p-tempBuf);
+			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
 
+			/* Shifts string to the second "." */
+			p = strchr(tempBuf, ',');
+			position = (int)(p-tempBuf);
+			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
 
-			for(int i = 0; i < strlen(buf); i++) {
+			/* Shifts string to the third "." */
+			p = strchr(tempBuf, ',');
+			position = (int)(p-tempBuf);
+			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
 
-				if (buf[i] == ',') {
-					comma++;
-					continue;
-				}
-				if (comma == 4) {
-					firstnumber[j] = buf[i];
-					++j;
-				}
+			/* Shifts string to the fourth "," */
+			p = strchr(tempBuf, ',');
+			position = (int)(p-tempBuf);
+			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
 
-				if (comma == 5) {
-					secondnumber[k] = buf[i];
-					k++;
-				}
-			}
+			/* Gets first number*/
+			p = strchr(tempBuf, ',');
+			position = (int)(p-tempBuf);
+			strncpy(firstnumber, tempBuf, position);
+
+			/* Shifts to the fifth "," */
+			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
+
+			/* Gets second number */
+			p = strchr(tempBuf, ')');
+			position = (int)(p-tempBuf);
+			strncpy(secondnumber, tempBuf, position);
 
 			int number1 = atoi(firstnumber);
 			int number2 = atoi(secondnumber);
