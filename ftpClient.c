@@ -160,7 +160,20 @@ int main(int argc, char * argv[])
 
     printf("Connected!\n");
 
+    int fd = open(url, O_CREAT | O_RDWR);
+    if (fd < 0) {
+    	perror("Error trying to open file!");
+    	exit(1);
+    }
 
+    char getfile[URL_LENGTH];
+    bzero(getfile, URL_LENGTH);
+    strcpy(getfile, "retr ");
+    strcat(getfile, "README");
+    strcat(getfile, "\r\n");
+    write(sockfd, getfile, strlen(getfile));
+
+    rec = receive(auxsockfd);
 
     return 0;
 }
@@ -275,7 +288,7 @@ int parseAdd(char * address)
     int totalMatch;
     int matchesBegin;
 
-    if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.])+/([[A-Za-z0-9/])+", REG_EXTENDED) != 0)
+    if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.~-])+/([[A-Za-z0-9/~.-])+", REG_EXTENDED) != 0)
     {
         perror("Could not compile regular expression");
         exit(1);

@@ -10,6 +10,7 @@
 #include <regex.h>
 #include <string.h>
 #include <strings.h>
+#include <fcntl.h>
 
 #define HOST_LENGTH 64
 #define USERNAME_LENGTH 255
