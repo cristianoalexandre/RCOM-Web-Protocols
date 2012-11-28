@@ -197,7 +197,7 @@ int main(int argc, char * argv[])
 }
 
 int writefile (int sockfd, char * file) {
-	int fd = open(file, O_CREAT | O_RDWR | O_EXCL);
+	int fd = open(file, O_CREAT | O_RDWR | O_EXCL, S_IRWXU);
 	if (fd < 0) {
 		perror("Error trying to open file!");
 		exit(1);
@@ -206,13 +206,16 @@ int writefile (int sockfd, char * file) {
 	char buf[MAXLENGTH];
 	bzero(buf, MAXLENGTH);
 
-	int status = read(sockfd, buf, strlen(buf));
+	int status = read(sockfd, buf, MAXLENGTH);
+
+	printf("buf: %s\n", buf);
 	while (status > 0 ) {
 		printf("status: %d", status);
 
 		write(fd, buf, status);
-		read(sockfd, buf, strlen(buf));
+		status = read(sockfd, buf, MAXLENGTH);
 	}
+
 
 	close(fd);
 
