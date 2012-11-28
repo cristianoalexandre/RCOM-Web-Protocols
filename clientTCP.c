@@ -29,9 +29,6 @@ int connect_socket(char * hostip, int port)
         exit(0);
     }
 
-    printf("Connected!\n");
-    printf("sockfd: %d\n", sockfd);
-
     return sockfd;
 }
 

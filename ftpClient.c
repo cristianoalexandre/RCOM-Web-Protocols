@@ -20,6 +20,25 @@ int main(int argc, char * argv[])
 
 	printf("String compiled sucessfully\n\n");
 
+	char teste[strlen(argv[1])];
+	bzero(teste, strlen(argv[1]));
+	char * bar = strrchr(argv[1], '/');
+
+	char file[MAXLENGTH];
+
+	/* Removes last bar if exists and gets file */
+	if (argv[1][strlen(argv[1])-1] == '/') {
+		strncpy(teste, argv[1], strlen(argv[1])-1);
+		bzero(argv[1], strlen(argv[1]));
+		strcpy(argv[1], teste);
+
+		bar = strrchr(argv[1], '/');
+		int position = (int)(bar-argv[1]);
+		strncpy(file, argv[1] + position + 1, position);
+
+		printf("path: %s\n", file);
+	}
+
 	/* Removes "ftp://" from string */
 	char ftpFreeBuffer[strlen(argv[1]) - 5];
 	strncpy(ftpFreeBuffer, argv[1] + 6, strlen(argv[1]) - 5);
@@ -93,7 +112,7 @@ int main(int argc, char * argv[])
 		/* Gets url path */
 		strcpy(url, shiftedBuffer);
 
-		printf("secopdn host %s, username %s, pass %s, url %s\n", host, username, password, url);
+		printf("host %s, username %s, pass %s, url %s\n", host, username, password, url);
 	}
 
 	char user[USERNAME_LENGTH];
@@ -108,7 +127,7 @@ int main(int argc, char * argv[])
 	strcat(pass, password);
 	strcat(pass, "\r\n");
 
-	printf("username %s, password %s\n", user, pass);
+	printf("username %spassword %s\n", user, pass);
 
 	char * h_address = (char*) getip(host);
 
@@ -122,7 +141,12 @@ int main(int argc, char * argv[])
 	}
 
 	/* Sending username */
-	write(sockfd, user, strlen(user));
+	int bytes = write(sockfd, user, strlen(user));
+	if (bytes <= 0) {
+		perror("Error trying to write username! Exiting...\n");
+		exit(1);
+	}
+
 	rec = receive(sockfd);
 	if (rec == -1 || rec > 3) {
 		perror("Access denied 1! Exiting...\n");
@@ -130,7 +154,11 @@ int main(int argc, char * argv[])
 	}
 
 	/* Sending password */
-	write(sockfd, pass, strlen(pass));
+	bytes = write(sockfd, pass, strlen(pass));
+	if (bytes <= 0) {
+		perror("Error trying to write password! Exiting...\n");
+		exit(1);
+	}
 	rec = receive(sockfd);
 	if (rec == -1 || rec > 6) {
 		perror("Access denied 2! Exiting...\n");
@@ -138,7 +166,11 @@ int main(int argc, char * argv[])
 	}
 
 	/* Sending pasv */
-	write(sockfd, "pasv\r\n", 6);
+	bytes = write(sockfd, "pasv\r\n", 6);
+	if (bytes <= 0) {
+		perror("Error trying to write pasv! Exiting...\n");
+		exit(1);
+	}
 	rec = receive_data(sockfd);
 	if(rec == -1) {
 		perror("Access denied 3! Exiting...\n");
@@ -150,8 +182,6 @@ int main(int argc, char * argv[])
 	/* Connecting to new port */
 	int auxsockfd = connect_socket(h_address, rec);
 
-	printf("Auxsockfd: %d\n",auxsockfd);
-
 	printf("Connected!\n");
 
 	char getfile[URL_LENGTH];
@@ -159,8 +189,6 @@ int main(int argc, char * argv[])
 	strcpy(getfile, "RETR /");
 	strcat(getfile, url);
 	strcat(getfile, "\r\n");
-
-	printf("getfile: %s\n", getfile);
 
 	write(sockfd, getfile, strlen(getfile));
 
@@ -172,13 +200,7 @@ int main(int argc, char * argv[])
 	}
 
 	/* Response in socket opened with previous port with content of file */
-	writefile(auxsockfd, "robos.txt");
-
-	/*rec = receive(auxsockfd);
-	if (rec == -1 || rec > 3) {
-		perror("Access denied 5! Exiting...\n");
-		exit(1);
-	}*/
+	writefile(auxsockfd, file);
 
 	/* Retrieving is ok or not */
 	rec = receive(sockfd);
@@ -208,19 +230,15 @@ int writefile (int sockfd, char * file) {
 
 	int status = read(sockfd, buf, MAXLENGTH);
 
-	printf("buf: %s\n", buf);
+	printf("Message received: %s\n", buf);
 	while (status > 0 ) {
-		printf("status: %d", status);
-
 		write(fd, buf, status);
 		status = read(sockfd, buf, MAXLENGTH);
 	}
 
-
 	close(fd);
 
 	return 0;
-
 }
 
 int receive_data(int sockfd) {
@@ -229,10 +247,8 @@ int receive_data(int sockfd) {
 
 	int status = read(sockfd, buf, MAXLENGTH);
 
-	printf("status: %d", status);
-
 	if(status > 0) {
-		printf("%s\n", buf);
+		printf("Message received: %s\n", buf);
 
 		/* Gets status */
 		char tempBuf[strlen(buf)];
@@ -245,45 +261,26 @@ int receive_data(int sockfd) {
 
 		int recstatus = atoi(statuscode);
 
-		char firstnumber[5];
+		char firstnumber[3];
 		char secondnumber[5];
 		bzero(firstnumber, strlen(firstnumber));
 		bzero(secondnumber, strlen(secondnumber));
 
 		/* Checks if coded received is status good to continue*/
 		if (recstatus == PORT_STATUS) {
-			/* Shifts string to the first "," */
-			char * p = strchr(tempBuf, ',');
-			int position = (int)(p-tempBuf);
-			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
-
-			/* Shifts string to the second "." */
-			p = strchr(tempBuf, ',');
-			position = (int)(p-tempBuf);
-			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
-
-			/* Shifts string to the third "." */
-			p = strchr(tempBuf, ',');
-			position = (int)(p-tempBuf);
-			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
-
-			/* Shifts string to the fourth "," */
-			p = strchr(tempBuf, ',');
-			position = (int)(p-tempBuf);
-			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
-
-			/* Gets first number*/
-			p = strchr(tempBuf, ',');
-			position = (int)(p-tempBuf);
-			strncpy(firstnumber, tempBuf, position);
-
-			/* Shifts to the fifth "," */
-			strncpy(tempBuf, tempBuf + position + 1, strlen(tempBuf)-position);
-
 			/* Gets second number */
-			p = strchr(tempBuf, ')');
-			position = (int)(p-tempBuf);
-			strncpy(secondnumber, tempBuf, position);
+			char * p = strrchr(tempBuf, ',');
+			int position = (int)(p-tempBuf);
+			strncpy(secondnumber, tempBuf + position + 1, strlen(tempBuf)-position-4);
+
+			/* Shifts string */
+			char teste[strlen(tempBuf)];
+			strncpy(teste, tempBuf, position);
+
+			/* Gets the first number */
+			p = strrchr(teste, ',');
+			position = (int)(p-teste);
+			strncpy(firstnumber, teste + position + 1, strlen(teste)-position-1);
 
 			int number1 = atoi(firstnumber);
 			int number2 = atoi(secondnumber);
@@ -296,7 +293,6 @@ int receive_data(int sockfd) {
 			return port;
 		}
 	}
-
 	return -1;
 }
 
@@ -306,10 +302,8 @@ int receive(int sockfd) {
 
 	int status = read(sockfd, buf, MESSAGE_LENGTH);
 
-	printf("status: %d\n", status);
-
 	if(status > 0) {
-		printf("%s\n", buf);
+		printf("Message received: %s\n", buf);
 
 		char statuscode[3];
 		strncpy(statuscode, buf, 3);
@@ -335,23 +329,19 @@ int parseAdd(char * address)
 	int totalMatch;
 	int matchesBegin;
 
-	if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.~-])+/([[A-Za-z0-9/~.-])+", REG_EXTENDED) != 0)
-	{
+	if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.~-])+/([[A-Za-z0-9/~.-])+", REG_EXTENDED) != 0) {
 		perror("Could not compile regular expression");
 		exit(1);
 	}
 
 	regexec(&preg, address, nmatch, pmatch, REG_EXTENDED);
-
 	regfree(&preg);
 
 	totalMatch = pmatch[0].rm_eo;
 	matchesBegin = pmatch[0].rm_so;
 
 	if (totalMatch != nmatch || matchesBegin != 0)
-	{
 		return 1;
-	}
 
 	return 0;
 }
