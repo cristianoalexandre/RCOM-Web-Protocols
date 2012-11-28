@@ -18,6 +18,7 @@
 #define MESSAGE_LENGTH 255
 #define URL_LENGTH 255
 #define PORT_STATUS 227
+#define MAXLENGTH 1024
 
 /**
  * FTP Status Codes
@@ -62,6 +63,14 @@ int receive(int sockfd);
  * @return port to connect
  */
 int receive_data(int sockfd);
+
+/**
+ * Writes information to a file.
+ * @param sockfd file descriptor of socket to read message
+ * @param file file to write information
+ */
+
+int writefile (int sockfd, char * file);
 
 
 #endif /* FTPCLIENT_H */

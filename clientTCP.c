@@ -17,6 +17,9 @@ int connect_socket(char * hostip, int port)
         perror("socket()");
         exit(0);
     }
+
+    printf("File descriptor created!\n");
+
     /*connect to the server*/
     if (connect(sockfd,
                 (struct sockaddr *) &server_addr,
@@ -25,6 +28,9 @@ int connect_socket(char * hostip, int port)
         perror("connect()");
         exit(0);
     }
+
+    printf("Connected!\n");
+    printf("sockfd: %d\n", sockfd);
 
     return sockfd;
 }

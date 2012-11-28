@@ -3,46 +3,46 @@
 
 int main(int argc, char * argv[])
 {
-    if (argc <= 1 || argc > 2)
-    {
-        perror("ERROR: Invalid usage!");
-        perror("Usage: client ftp://[<user>:<password>@]<host>/<url-path>!");
-        exit(1);
-    }
+	if (argc <= 1 || argc > 2)
+	{
+		perror("ERROR: Invalid usage!");
+		perror("Usage: client ftp://[<user>:<password>@]<host>/<url-path>!");
+		exit(1);
+	}
 
-    /* Checks if well writen usage */
-    if (parseAdd(argv[1]))
-    {
-        perror("ERROR: Invalid ftp string!");
-        perror("Should be: ftp://[<user>:<password>@]<host>/<url-path>!");
-        exit(1);
-    }
+	/* Checks if well writen usage */
+	if (parseAdd(argv[1]))
+	{
+		perror("ERROR: Invalid ftp string!");
+		perror("Should be: ftp://[<user>:<password>@]<host>/<url-path>!");
+		exit(1);
+	}
 
-    printf("String compiled sucessfully\n\n");
+	printf("String compiled sucessfully\n\n");
 
-    /* Removes "ftp://" from string */
-    char ftpFreeBuffer[strlen(argv[1]) - 5];
-    strncpy(ftpFreeBuffer, argv[1] + 6, strlen(argv[1]) - 5);
+	/* Removes "ftp://" from string */
+	char ftpFreeBuffer[strlen(argv[1]) - 5];
+	strncpy(ftpFreeBuffer, argv[1] + 6, strlen(argv[1]) - 5);
 
-    /* Defines strings to use and cleans them */
-    char username[USERNAME_LENGTH];
-    bzero(username, USERNAME_LENGTH);
-    char password[PASSWORD_LENGTH];
-    bzero(password, PASSWORD_LENGTH);
-    char host[HOST_LENGTH];
-    bzero(host, HOST_LENGTH);
-    char url[URL_LENGTH];
-    bzero(url, URL_LENGTH);
+	/* Defines strings to use and cleans them */
+	char username[USERNAME_LENGTH];
+	bzero(username, USERNAME_LENGTH);
+	char password[PASSWORD_LENGTH];
+	bzero(password, PASSWORD_LENGTH);
+	char host[HOST_LENGTH];
+	bzero(host, HOST_LENGTH);
+	char url[URL_LENGTH];
+	bzero(url, URL_LENGTH);
 
-    /* Checks if has password and username defined */
-    char * hasuser = strchr(ftpFreeBuffer, '@');
+	/* Checks if has password and username defined */
+	char * hasuser = strchr(ftpFreeBuffer, '@');
 
-    if (hasuser != NULL) {
-    	/* Copys localy string to parse */
-    	char shiftedBuffer[strlen(argv[1]) - 5];
-    	strcpy(shiftedBuffer, ftpFreeBuffer);
+	if (hasuser != NULL) {
+		/* Copys localy string to parse */
+		char shiftedBuffer[strlen(argv[1]) - 5];
+		strcpy(shiftedBuffer, ftpFreeBuffer);
 
-    	/* Find and get username */
+		/* Find and get username */
 		char * p = strchr(shiftedBuffer, ':');
 
 		int position = (int)(p-shiftedBuffer);
@@ -72,8 +72,8 @@ int main(int argc, char * argv[])
 
 
 		printf("host %s, username %s, pass %s, url %s\n", host, username, password, url);
-    }
-    else {
+	}
+	else {
 		/* Copys localy string to parse */
 		char shiftedBuffer[strlen(argv[1]) - 5];
 		strcpy(shiftedBuffer, ftpFreeBuffer);
@@ -94,95 +94,139 @@ int main(int argc, char * argv[])
 		strcpy(url, shiftedBuffer);
 
 		printf("secopdn host %s, username %s, pass %s, url %s\n", host, username, password, url);
-    }
+	}
 
-    char user[USERNAME_LENGTH];
-    bzero(user, USERNAME_LENGTH);
-    strcpy(user, "USER ");
-    strcat(user, username);
-    strcat(user, "\r\n");
+	char user[USERNAME_LENGTH];
+	bzero(user, USERNAME_LENGTH);
+	strcpy(user, "USER ");
+	strcat(user, username);
+	strcat(user, "\r\n");
 
-    char pass[PASSWORD_LENGTH];
-    bzero(pass, PASSWORD_LENGTH);
-    strcpy(pass, "PASS ");
-    strcat(pass, password);
-    strcat(pass, "\r\n");
+	char pass[PASSWORD_LENGTH];
+	bzero(pass, PASSWORD_LENGTH);
+	strcpy(pass, "PASS ");
+	strcat(pass, password);
+	strcat(pass, "\r\n");
 
-    printf("username %s, password %s\n", user, pass);
+	printf("username %s, password %s\n", user, pass);
 
-    char * h_address = (char*) getip(host);
+	char * h_address = (char*) getip(host);
 
-    int sockfd = connect_socket(h_address, 21);
+	int sockfd = connect_socket(h_address, 21);
 
-    /* Receives first message */
-    int rec = receive(sockfd);
-    if (rec > 3) {
-    	perror("Access denied 1! Exiting...\n");
-    	exit(1);
-    }
+	/* Receives first message */
+	int rec = receive(sockfd);
+	if (rec > 3) {
+		perror("Access denied 1! Exiting...\n");
+		exit(1);
+	}
 
-    /* Sending username */
-    write(sockfd, user, strlen(user));
-    rec = receive(sockfd);
-    if (rec == -1 || rec > 3) {
-    	perror("Access denied 1! Exiting...\n");
-    	exit(1);
-    }
+	/* Sending username */
+	write(sockfd, user, strlen(user));
+	rec = receive(sockfd);
+	if (rec == -1 || rec > 3) {
+		perror("Access denied 1! Exiting...\n");
+		exit(1);
+	}
 
-    /* Sending password */
-    write(sockfd, pass, strlen(pass));
-    rec = receive(sockfd);
-    if (rec == -1 || rec > 6) {
+	/* Sending password */
+	write(sockfd, pass, strlen(pass));
+	rec = receive(sockfd);
+	if (rec == -1 || rec > 6) {
 		perror("Access denied 2! Exiting...\n");
 		exit(1);
 	}
 
-    /* Sending pasv */
-    char pasv[MESSAGE_LENGTH];
-    bzero(pasv, MESSAGE_LENGTH);
-
-    write(sockfd, "pasv\r\n", 6);
-    rec = receive_data(sockfd);
-    if(rec == -1) {
-    	perror("Access denied 3! Exiting...\n");
-    	exit(1);
-    }
-
-    printf("Connecting to %d!\n", rec);
-
-    /* Connecting to new port */
-    int auxsockfd = connect_socket(h_address, rec);
-    rec = receive(auxsockfd);
-    if(rec == -1) {
-		perror("Access denied 4! Exiting...\n");
+	/* Sending pasv */
+	write(sockfd, "pasv\r\n", 6);
+	rec = receive_data(sockfd);
+	if(rec == -1) {
+		perror("Access denied 3! Exiting...\n");
 		exit(1);
 	}
 
-    printf("Connected!\n");
+	printf("Connecting to %d!\n", rec);
 
-    int fd = open(url, O_CREAT | O_RDWR);
-    if (fd < 0) {
-    	perror("Error trying to open file!");
-    	exit(1);
-    }
+	/* Connecting to new port */
+	int auxsockfd = connect_socket(h_address, rec);
 
-    char getfile[URL_LENGTH];
-    bzero(getfile, URL_LENGTH);
-    strcpy(getfile, "retr ");
-    strcat(getfile, "README");
-    strcat(getfile, "\r\n");
-    write(sockfd, getfile, strlen(getfile));
+	printf("Auxsockfd: %d\n",auxsockfd);
 
-    rec = receive(auxsockfd);
+	printf("Connected!\n");
 
-    return 0;
+	char getfile[URL_LENGTH];
+	bzero(getfile, URL_LENGTH);
+	strcpy(getfile, "RETR /");
+	strcat(getfile, url);
+	strcat(getfile, "\r\n");
+
+	printf("getfile: %s\n", getfile);
+
+	write(sockfd, getfile, strlen(getfile));
+
+	/* Gets first response: file exists or not */
+	rec = receive(sockfd);
+	if (rec == -1 || rec > 3) {
+		perror("Access denied 5! Exiting...\n");
+		exit(1);
+	}
+
+	/* Response in socket opened with previous port with content of file */
+	writefile(auxsockfd, "robos.txt");
+
+	/*rec = receive(auxsockfd);
+	if (rec == -1 || rec > 3) {
+		perror("Access denied 5! Exiting...\n");
+		exit(1);
+	}*/
+
+	/* Retrieving is ok or not */
+	rec = receive(sockfd);
+	if (rec == -1 || rec > 3) {
+		perror("Access denied 5! Exiting...\n");
+		exit(1);
+	}
+
+	shutdown(sockfd,SHUT_RDWR);
+	close(sockfd);
+
+	shutdown(auxsockfd,SHUT_RDWR);
+	close(auxsockfd);
+
+	return 0;
+}
+
+int writefile (int sockfd, char * file) {
+	int fd = open(file, O_CREAT | O_RDWR | O_EXCL);
+	if (fd < 0) {
+		perror("Error trying to open file!");
+		exit(1);
+	}
+
+	char buf[MAXLENGTH];
+	bzero(buf, MAXLENGTH);
+
+	int status = read(sockfd, buf, strlen(buf));
+	while (status > 0 ) {
+		printf("status: %d", status);
+
+		write(fd, buf, status);
+		read(sockfd, buf, strlen(buf));
+	}
+
+	close(fd);
+
+	return 0;
+
 }
 
 int receive_data(int sockfd) {
-	char buf[MESSAGE_LENGTH];
-	bzero(buf, MESSAGE_LENGTH);
+	char buf[MAXLENGTH];
+	bzero(buf, MAXLENGTH);
 
-	int status = read(sockfd, buf, MESSAGE_LENGTH);
+	int status = read(sockfd, buf, MAXLENGTH);
+
+	printf("status: %d", status);
 
 	if(status > 0) {
 		printf("%s\n", buf);
@@ -198,8 +242,8 @@ int receive_data(int sockfd) {
 
 		int recstatus = atoi(statuscode);
 
-		char firstnumber[10];
-		char secondnumber[10];
+		char firstnumber[5];
+		char secondnumber[5];
 		bzero(firstnumber, strlen(firstnumber));
 		bzero(secondnumber, strlen(secondnumber));
 
@@ -282,29 +326,29 @@ int receive(int sockfd) {
 
 int parseAdd(char * address)
 {
-    regex_t preg;
-    size_t nmatch = strlen(address);
-    regmatch_t pmatch[nmatch];
-    int totalMatch;
-    int matchesBegin;
+	regex_t preg;
+	size_t nmatch = strlen(address);
+	regmatch_t pmatch[nmatch];
+	int totalMatch;
+	int matchesBegin;
 
-    if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.~-])+/([[A-Za-z0-9/~.-])+", REG_EXTENDED) != 0)
-    {
-        perror("Could not compile regular expression");
-        exit(1);
-    }
+	if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.~-])+/([[A-Za-z0-9/~.-])+", REG_EXTENDED) != 0)
+	{
+		perror("Could not compile regular expression");
+		exit(1);
+	}
 
-    regexec(&preg, address, nmatch, pmatch, REG_EXTENDED);
+	regexec(&preg, address, nmatch, pmatch, REG_EXTENDED);
 
-    regfree(&preg);
+	regfree(&preg);
 
-    totalMatch = pmatch[0].rm_eo;
-    matchesBegin = pmatch[0].rm_so;
+	totalMatch = pmatch[0].rm_eo;
+	matchesBegin = pmatch[0].rm_so;
 
-    if (totalMatch != nmatch || matchesBegin != 0)
-    {
-        return 1;
-    }
+	if (totalMatch != nmatch || matchesBegin != 0)
+	{
+		return 1;
+	}
 
-    return 0;
+	return 0;
 }
