@@ -22,7 +22,7 @@
 #define URL_LENGTH 255
 #define FILE_LENGTH
 #define PORT_STATUS 227
-#define MAXLENGTH 512
+#define MAXLENGTH 1024
 
 /**
  * FTP Status Codes

@@ -146,14 +146,7 @@ int main(int argc, char * argv[])
 
     int sockfd = connect_socket(h_address, 21);
 
-    /* Receives first message */
-    int rec = -10;
-    //printf("RECEIVE STATUS B: %d\n", rec);
-
-
-    rec = receive(sockfd);
-    //printf("RECEIVE STATUS A: %d\n", rec);
-
+    int rec = receive(sockfd);
     if (rec > 3)
     {
         perror("Access denied! Exiting...\n");
@@ -168,7 +161,6 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
-    sleep(1);
     rec = receive(sockfd);
     if (rec == -1 || rec > 3)
     {
@@ -184,7 +176,6 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
-    sleep(1);
     rec = receive(sockfd);
     if (rec == -1 || rec > 6)
     {
@@ -234,14 +225,6 @@ int main(int argc, char * argv[])
     /* Response in socket opened with previous port with content of file */
     writefile(auxsockfd, file);
 
-    /* Retrieving is ok or not */
-    rec = receive(sockfd);
-    if (rec == -1 || rec > 3)
-    {
-        perror("Access denied 5! Exiting...\n");
-        exit(1);
-    }
-
     shutdown(sockfd, SHUT_RDWR);
     close(sockfd);
 
@@ -253,23 +236,25 @@ int main(int argc, char * argv[])
 
 int writefile(int sockfd, char * file)
 {
-    int fd = open(file, O_CREAT | O_RDWR | O_EXCL, S_IRWXU);
+    int fd = open(file, O_CREAT | O_RDWR | O_EXCL | O_TRUNC, S_IRWXU);
     if (fd < 0)
     {
         perror("Error trying to open file!");
         exit(1);
     }
 
-    char buf[MAXLENGTH];
-    bzero(buf, MAXLENGTH);
+    char buf[512];
 
-    int status = read(sockfd, buf, MAXLENGTH);
 
-    printf("%s\n", buf);
-    while (status > 0)
+    int status;
+
+
+    while ((status = read(sockfd, buf, 512)))
     {
-        write(fd, buf, status);
-        status = read(sockfd, buf, MAXLENGTH);
+    	printf("%s\n", buf);
+    	buf[status] = '\0';
+        write(fd, buf, strlen(buf));
+        bzero(buf, strlen(buf));
     }
 
     close(fd);
@@ -337,43 +322,13 @@ int receive_data(int sockfd)
 
 int receive(int sockfd)
 {
-    char buf[MESSAGE_LENGTH];
+    char buf[MAXLENGTH];
     bzero(buf, strlen(buf));
     int recstatus;
-    /*fd_set readfds;
-    struct timeval tv;
-    int selval;
+    sleep(1);
 
-    FD_ZERO(&readfds);
-    FD_SET(sockfd, &readfds);
-
-    tv.tv_sec = 2;
-    tv.tv_usec = 0;
-    int status = read(sockfd, buf, MESSAGE_LENGTH);
-
-    selval = select(sockfd+1, &readfds, NULL, NULL, &tv);
-    if (selval) {
-            char statuscode[3];
-            strncpy(statuscode, buf, 3);
-            statuscode[3] = '\0';
-
-            printf("code%s\n", statuscode);
-            char firstint[2];
-            firstint[0] = statuscode[0];
-            firstint[1] = '\0';
-
-            recstatus = atoi(firstint);
-
-            bzero(buf, strlen(buf));
-            status = read(sockfd, buf, MESSAGE_LENGTH);
-            printf("%s\n", buf);
-            selval = select(sockfd+1, &readfds, NULL, NULL, &tv);
-    }
-
-    return recstatus;*/
-
-    int status = read(sockfd, buf, MESSAGE_LENGTH);
-
+    int status = read(sockfd, buf, MAXLENGTH);
+    buf[status] = '\0';
     if (status)
     {
         printf("Message received: %s\n", buf);
@@ -382,33 +337,15 @@ int receive(int sockfd)
         strncpy(statuscode, buf, 3);
         statuscode[3] = '\0';
 
-        //puts(statuscode);
-
         char firstint[2];
         firstint[0] = statuscode[0];
         firstint[1] = '\0';
 
-        //puts(firstint);
-
         recstatus = atoi(firstint);
+
+        return recstatus;
     }
-
-    /*puts("---------------");
-    puts(buf);
-    puts("===============");*/
-
-    while (buf[4] == '-')
-    {
-        bzero(buf, strlen(buf));
-        status = read(sockfd, buf, MESSAGE_LENGTH);
-
-        /*puts("------ MULTILINE ---------");
-        puts(buf);
-        puts("===============");*/
-    }
-
-    return recstatus;
-
+    return -1;
 }
 
 int parseAdd(char * address)
