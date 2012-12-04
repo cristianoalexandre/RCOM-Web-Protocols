@@ -39,6 +39,15 @@ int main(int argc, char * argv[])
 		printf("path: %s\n", file);
 	}
 
+	/* Gets path */
+	else {
+		bar = strrchr(argv[1], '/');
+		int position = (int)(bar-argv[1]);
+		strncpy(file, argv[1] + position + 1, position);
+
+		printf("path: %s\n", file);
+	}
+
 	/* Removes "ftp://" from string */
 	char ftpFreeBuffer[strlen(argv[1]) - 5];
 	strncpy(ftpFreeBuffer, argv[1] + 6, strlen(argv[1]) - 5);
@@ -99,7 +108,7 @@ int main(int argc, char * argv[])
 
 		/* Username and Password defined */
 		strcpy(username, "anonymous");
-		strcpy(password, "");
+		strcpy(password, " ");
 
 		/* Gets hostname */
 		char * p = strchr(shiftedBuffer, '/');
@@ -136,7 +145,7 @@ int main(int argc, char * argv[])
 	/* Receives first message */
 	int rec = receive(sockfd);
 	if (rec > 3) {
-		perror("Access denied 1! Exiting...\n");
+		perror("Access denied! Exiting...\n");
 		exit(1);
 	}
 
@@ -149,7 +158,7 @@ int main(int argc, char * argv[])
 
 	rec = receive(sockfd);
 	if (rec == -1 || rec > 3) {
-		perror("Access denied 1! Exiting...\n");
+		perror("Access denied trying to read username response! Exiting...\n");
 		exit(1);
 	}
 
@@ -161,7 +170,7 @@ int main(int argc, char * argv[])
 	}
 	rec = receive(sockfd);
 	if (rec == -1 || rec > 6) {
-		perror("Access denied 2! Exiting...\n");
+		perror("Access denied trying to read password response! Exiting...\n");
 		exit(1);
 	}
 
@@ -171,9 +180,10 @@ int main(int argc, char * argv[])
 		perror("Error trying to write pasv! Exiting...\n");
 		exit(1);
 	}
+
 	rec = receive_data(sockfd);
 	if(rec == -1) {
-		perror("Access denied 3! Exiting...\n");
+		perror("Access denied to read pasv response! Exiting...\n");
 		exit(1);
 	}
 
@@ -195,7 +205,7 @@ int main(int argc, char * argv[])
 	/* Gets first response: file exists or not */
 	rec = receive(sockfd);
 	if (rec == -1 || rec > 3) {
-		perror("Access denied 5! Exiting...\n");
+		perror("Access denied trying to read if file exists or not! Exiting...\n");
 		exit(1);
 	}
 
@@ -298,27 +308,62 @@ int receive_data(int sockfd) {
 
 int receive(int sockfd) {
 	char buf[MESSAGE_LENGTH];
+	bzero(buf, strlen(buf));
 	int recstatus;
+	/*fd_set readfds;
+	struct timeval tv;
+	int selval;
 
+	FD_ZERO(&readfds);
+	FD_SET(sockfd, &readfds);
+
+	tv.tv_sec = 2;
+	tv.tv_usec = 0;
 	int status = read(sockfd, buf, MESSAGE_LENGTH);
 
-	if(status > 0) {
-		printf("Message received: %s\n", buf);
-
+	selval = select(sockfd+1, &readfds, NULL, NULL, &tv);
+	if (selval) {
 		char statuscode[3];
 		strncpy(statuscode, buf, 3);
 		statuscode[3] = '\0';
 
+		printf("code%s\n", statuscode);
 		char firstint[2];
 		firstint[0] = statuscode[0];
 		firstint[1] = '\0';
 
 		recstatus = atoi(firstint);
 
-		return recstatus;
+		bzero(buf, strlen(buf));
+		status = read(sockfd, buf, MESSAGE_LENGTH);
+		printf("%s\n", buf);
+		selval = select(sockfd+1, &readfds, NULL, NULL, &tv);
 	}
 
-	return -1;
+	return recstatus;*/
+
+	int status = read(sockfd, buf, MESSAGE_LENGTH);
+
+	if (status) {
+	printf("Message received: %s\n", buf);
+
+	char statuscode[3];
+	strncpy(statuscode, buf, 3);
+	statuscode[3] = '\0';
+
+	char firstint[2];
+	firstint[0] = statuscode[0];
+	firstint[1] = '\0';
+
+	recstatus = atoi(firstint);
+	}
+
+	while(buf[3] != ' ') {
+		bzero(buf, strlen(buf));
+		status = read(sockfd, buf, MESSAGE_LENGTH);
+	}
+
+	return recstatus;
 }
 
 int parseAdd(char * address)
