@@ -214,7 +214,7 @@ int main(int argc, char * argv[])
 
     write(sockfd, getfile, strlen(getfile));
 
-    /* Gets first response: file exists or not */
+    /* Gets first response: file exists or not */buf
     rec = receive(sockfd);
     if (rec == -1 || rec > 3)
     {
@@ -356,7 +356,7 @@ int parseAdd(char * address)
     int totalMatch;
     int matchesBegin;
 
-    if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.~-])+/([[A-Za-z0-9/~.-])+", REG_EXTENDED) != 0)
+    if (regcomp(&preg, "ftp://(([A-Za-z0-9])*:([A-Za-z0-9])*@)*([A-Za-z0-9.~-])+/([[A-Za-z0-9/~._-])+", REG_EXTENDED) != 0)
     {
         perror("Could not compile regular expression");
         exit(1);
