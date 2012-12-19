@@ -255,7 +255,6 @@ int writefile(int sockfd, char * file)
     while ((status = read(sockfd, buf, 512)))
     {
     	printf("%s\n", buf);
-    	buf[status] = '\0';
         write(fd, buf, strlen(buf));
         if (status < 512)
             break;
