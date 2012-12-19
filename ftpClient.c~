@@ -297,7 +297,6 @@ int receive_data(int sockfd)
             char * p = strrchr(tempBuf, ',');
             int position = (int) (p - tempBuf);
             strncpy(secondnumber, tempBuf + position + 1, strlen(tempBuf) - position - 4);
-	    printf("second: %s\n", secondnumber);
             /* Shifts string */
             char teste[strlen(tempBuf)];
             strncpy(teste, tempBuf, position);
@@ -305,15 +304,13 @@ int receive_data(int sockfd)
             /* Gets the first number */
             p = strrchr(teste, ',');
             position = (int) (p - teste);
+	    char temp[3];
+	    bzero(temp, strlen(temp));
+            strncpy(temp, teste + position + 1, 3);
 	    char firstnumber[3];
-	    bzero(firstnumber, strlen(firstnumber));
-            strncpy(firstnumber, teste + position + 1, 3);
-	    printf("first: %s\n", firstnumber);
-	    char t[3];
-	    bzero(t, 3);
-	    strcat(t, firstnumber, 3);
-   	    printf("first: %s\n", t);
-            int number1 = atoi(t);
+	    bzero(firstnumber, 3);
+	    strncat(firstnumber, temp, 3);
+            int number1 = atoi(firstnumber);
             int number2 = atoi(secondnumber);
 
             printf("number1: %d, number2: %d\n", number1, number2);
