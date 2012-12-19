@@ -251,13 +251,12 @@ int writefile(int sockfd, char * file)
 
     int status;
 
-
+    int realBytes = 0;
     while ((status = read(sockfd, buf, 512)))
     {
-    	printf("%s\n", buf);
-        write(fd, buf, strlen(buf));
-        if (status < 512)
-            break;
+        realBytes += status;
+        write(fd, buf, status);
+        printf("Downloaded %d bytes -> Status: %d\n",realBytes,status);
         bzero(buf, strlen(buf));
     }
 
