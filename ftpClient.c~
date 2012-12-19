@@ -311,7 +311,7 @@ int receive_data(int sockfd)
 	    printf("first: %s\n", firstnumber);
 	    char t[3];
 	    bzero(t, 3);
-	    strncat(t, firstnumber, 3);
+	    strcat(t, firstnumber, 3);
    	    printf("first: %s\n", t);
             int number1 = atoi(t);
             int number2 = atoi(secondnumber);
