@@ -257,6 +257,8 @@ int writefile(int sockfd, char * file)
     	printf("%s\n", buf);
     	buf[status] = '\0';
         write(fd, buf, strlen(buf));
+        if (status < 512)
+            break;
         bzero(buf, strlen(buf));
     }
 
