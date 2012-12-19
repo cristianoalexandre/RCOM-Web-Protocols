@@ -214,7 +214,7 @@ int main(int argc, char * argv[])
 
     write(sockfd, getfile, strlen(getfile));
 
-    /* Gets first response: file exists or not */buf
+    /* Gets first response: file exists or not */
     rec = receive(sockfd);
     if (rec == -1 || rec > 3)
     {
