@@ -225,14 +225,14 @@ int main(int argc, char * argv[])
     /* Response in socket opened with previous port with content of file */
     writefile(auxsockfd, file);
 
+    char b[1024];
+    recv(sockfd,b, 1024, MSG_DONTWAIT);
+
     shutdown(sockfd, SHUT_RDWR);
     close(sockfd);
 
     shutdown(auxsockfd, SHUT_RDWR);
     close(auxsockfd);
-
-    char b[1024];
-    recv(b, 1024, MSG_DONTWAIT);
 
     return 0;
 }
